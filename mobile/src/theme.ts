@@ -1,19 +1,15 @@
 export const colors = {
-  background: "#F4F7F7",
-  surface: "#FFFFFF",
-  primary: "#0F3D3E",
-  primarySoft: "#E6F2F2",
-  accent: "#2A9D8F",
-  text: "#163332",
-  muted: "#6B7C7C",
-  border: "#D7E2E2",
-  danger: "#B42318",
-  dangerSoft: "#FDECEC",
-  warning: "#B54708",
-  warningSoft: "#FEF4E6",
-  success: "#067647",
-  successSoft: "#E7F8EF",
-};
+  canvas: "#1A1A1A",
+  background: "#222526",
+  surface: "#363A3E",
+  text: "#E0E0E0",
+  muted: "#BFBFBF",
+} as const;
+
+export const fonts = {
+  regular: "PTSans_400Regular",
+  bold: "PTSans_700Bold",
+} as const;
 
 export const spacing = {
   xs: 6,

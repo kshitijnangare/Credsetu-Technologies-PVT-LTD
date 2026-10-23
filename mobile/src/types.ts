@@ -19,8 +19,30 @@ export type LoanSummary = {
   overdueAmount: number;
 };
 
+export type LoanAnalytics = {
+  summary: LoanSummary;
+  counts: {
+    total: number;
+    pending: number;
+    repaid: number;
+    overdue: number;
+  };
+  monthly: Array<{
+    month: string;
+    lent: number;
+    repaid: number;
+  }>;
+  topFriends: Array<{
+    friendName: string;
+    outstanding: number;
+    loanCount: number;
+  }>;
+};
+
 export type AuthUser = {
   id: string;
   phoneNumber: string;
   createdAt: string;
 };
+
+export type AppScreen = "dashboard" | "analytics";

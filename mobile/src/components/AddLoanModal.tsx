@@ -12,7 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { colors, spacing } from "../theme";
+import { colors, fonts, spacing } from "../theme";
 import { toIsoDate } from "../utils/format";
 
 type Props = {
@@ -48,7 +48,7 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
   const pickReceipt = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Permission needed", "Please allow photo library access to attach a receipt.");
+      Alert.alert("Permission needed", "Allow photo access to attach a Cloudinary receipt.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -68,7 +68,7 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
       return;
     }
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setError("Enter a valid amount greater than 0.");
+      setError("Enter an amount greater than 0.");
       return;
     }
     setSubmitting(true);
@@ -93,7 +93,8 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
-          <Text style={styles.title}>Add loan entry</Text>
+          <Text style={styles.title}>New entry</Text>
+          <Text style={styles.hint}>Receipts are uploaded to Cloudinary and stored as a URL on the loan.</Text>
           <TextInput
             style={styles.input}
             placeholder="Friend's name"
@@ -110,7 +111,7 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
             onChangeText={setAmount}
           />
           <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
-            <Text style={styles.dateText}>Due date: {dueDateLabel}</Text>
+            <Text style={styles.dateText}>Due {dueDateLabel}</Text>
           </Pressable>
           {showPicker ? (
             <DateTimePicker
@@ -123,10 +124,11 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
                   setDueDate(selected);
                 }
               }}
+              themeVariant="dark"
             />
           ) : null}
-          <Pressable style={styles.receiptButton} onPress={pickReceipt}>
-            <Text style={styles.receiptText}>{receiptUri ? "Change receipt photo" : "Attach receipt photo"}</Text>
+          <Pressable style={styles.receiptButton} onPress={() => void pickReceipt()}>
+            <Text style={styles.receiptText}>{receiptUri ? "Change receipt" : "Attach receipt"}</Text>
           </Pressable>
           {receiptUri ? <Image source={{ uri: receiptUri }} style={styles.preview} /> : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -135,7 +137,7 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
               <Text style={styles.secondaryText}>Cancel</Text>
             </Pressable>
             <Pressable style={styles.primary} onPress={() => void handleSubmit()} disabled={submitting}>
-              <Text style={styles.primaryText}>{submitting ? "Saving..." : "Save entry"}</Text>
+              <Text style={styles.primaryText}>{submitting ? "Saving" : "Save"}</Text>
             </Pressable>
           </View>
         </View>
@@ -147,46 +149,51 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(15, 61, 62, 0.45)",
+    backgroundColor: "rgba(26, 26, 26, 0.72)",
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: spacing.lg,
   },
   title: {
+    fontFamily: fonts.regular,
     fontSize: 22,
-    fontWeight: "800",
-    color: colors.primary,
+    color: colors.text,
+  },
+  hint: {
+    fontFamily: fonts.regular,
+    color: colors.muted,
+    marginTop: 6,
     marginBottom: spacing.md,
+    lineHeight: 18,
   },
   input: {
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingHorizontal: spacing.md,
-    paddingVertical: 12,
+    paddingVertical: 13,
     marginBottom: spacing.sm,
     color: colors.text,
-    backgroundColor: "#FBFEFE",
+    fontFamily: fonts.regular,
   },
   dateText: {
     color: colors.text,
-    fontWeight: "600",
+    fontFamily: fonts.regular,
   },
   receiptButton: {
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: colors.muted,
     borderRadius: 14,
     paddingVertical: 12,
     alignItems: "center",
     marginBottom: spacing.sm,
   },
   receiptText: {
-    color: colors.accent,
-    fontWeight: "700",
+    color: colors.text,
+    fontFamily: fonts.regular,
   },
   preview: {
     height: 120,
@@ -194,7 +201,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   error: {
-    color: colors.danger,
+    color: colors.text,
+    fontFamily: fonts.regular,
     marginBottom: spacing.sm,
   },
   actions: {
@@ -204,24 +212,23 @@ const styles = StyleSheet.create({
   secondary: {
     flex: 1,
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
     alignItems: "center",
     paddingVertical: 14,
   },
   secondaryText: {
-    color: colors.text,
-    fontWeight: "700",
+    color: colors.muted,
+    fontFamily: fonts.regular,
   },
   primary: {
     flex: 1,
     borderRadius: 14,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.text,
     alignItems: "center",
     paddingVertical: 14,
   },
   primaryText: {
-    color: "#FFFFFF",
-    fontWeight: "800",
+    color: colors.canvas,
+    fontFamily: fonts.regular,
   },
 });

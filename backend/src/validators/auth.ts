@@ -1,15 +1,29 @@
-import { z } from "zod";
+import Joi from "joi";
 
-export const phoneNumberSchema = z
-  .string()
+export const phoneNumberSchema = Joi.string()
   .trim()
-  .regex(/^\+?[0-9]{10,15}$/, "Phone number must be 10-15 digits and may start with +");
+  .pattern(/^\+?[0-9]{10,15}$/)
+  .required()
+  .messages({
+    "string.pattern.base": "Phone number must be 10-15 digits and may start with +",
+    "any.required": "Phone number is required",
+  });
 
-export const sendOtpSchema = z.object({
+export const sendOtpSchema = Joi.object({
   phoneNumber: phoneNumberSchema,
 });
 
-export const verifyOtpSchema = z.object({
+export const verifyOtpSchema = Joi.object({
   phoneNumber: phoneNumberSchema,
-  otp: z.string().regex(/^\d{4}$/, "OTP must be a 4-digit code"),
+  otp: Joi.string()
+    .pattern(/^\d{4}$/)
+    .required()
+    .messages({
+      "string.pattern.base": "OTP must be a 4-digit code",
+      "any.required": "OTP is required",
+    }),
+});
+
+export const otpQuerySchema = Joi.object({
+  phoneNumber: phoneNumberSchema,
 });

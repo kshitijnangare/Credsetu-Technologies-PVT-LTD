@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios, { AxiosError } from "axios";
 import { Platform } from "react-native";
-import type { AuthUser, Loan, LoanSummary } from "../types";
+import type { AuthUser, Loan, LoanAnalytics, LoanSummary } from "../types";
 
 const TOKEN_KEY = "miniledger.token";
 
@@ -12,7 +12,7 @@ export const API_ORIGIN =
 
 export const api = axios.create({
   baseURL: `${API_ORIGIN}/api`,
-  timeout: 15000,
+  timeout: 20000,
 });
 
 api.interceptors.request.use(async (config) => {
@@ -42,8 +42,19 @@ export const getErrorMessage = (error: unknown): string => {
 };
 
 export const authApi = {
-  sendOtp: async (phoneNumber: string): Promise<void> => {
-    await api.post("/auth/send-otp", { phoneNumber });
+  sendOtp: async (phoneNumber: string): Promise<{ expiresInSeconds: number }> => {
+    const { data } = await api.post<{ expiresInSeconds: number }>("/auth/send-otp", { phoneNumber });
+    return data;
+  },
+  resendOtp: async (phoneNumber: string): Promise<{ expiresInSeconds: number }> => {
+    const { data } = await api.post<{ expiresInSeconds: number }>("/auth/resend-otp", { phoneNumber });
+    return data;
+  },
+  otpStatus: async (phoneNumber: string): Promise<{ ttlSeconds: number; canResend: boolean }> => {
+    const { data } = await api.get<{ ttlSeconds: number; canResend: boolean }>("/auth/otp-status", {
+      params: { phoneNumber },
+    });
+    return data;
   },
   verifyOtp: async (
     phoneNumber: string,
@@ -64,6 +75,10 @@ export const loanApi = {
   },
   summary: async (): Promise<LoanSummary> => {
     const { data } = await api.get<LoanSummary>("/loans/summary");
+    return data;
+  },
+  analytics: async (): Promise<LoanAnalytics> => {
+    const { data } = await api.get<LoanAnalytics>("/loans/analytics");
     return data;
   },
   create: async (payload: {

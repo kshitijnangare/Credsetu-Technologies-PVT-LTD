@@ -3,24 +3,32 @@ import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { User } from "../models/User.js";
+import { consumeOtp, getOtpTtl, issueOtp } from "../services/otpService.js";
 import { AppError } from "../utils/errors.js";
-import { generateOtp, saveOtp, verifyStoredOtp } from "../utils/otp.js";
-import { sendOtpSchema, verifyOtpSchema } from "../validators/auth.js";
 
 export const sendOtp = async (req: Request, res: Response): Promise<void> => {
-  const { phoneNumber } = sendOtpSchema.parse(req.body);
-  const otp = generateOtp();
-  saveOtp(phoneNumber, otp);
+  const { phoneNumber } = req.body as { phoneNumber: string };
+  const { otp, ttlSeconds } = await issueOtp(phoneNumber);
   console.log(`🔑 [MOCK OTP] For ${phoneNumber}: ${otp}`);
+
   res.status(200).json({
     message: "OTP sent. Check the server logs for the mock code.",
-    expiresInSeconds: 300,
+    expiresInSeconds: ttlSeconds,
+  });
+};
+
+export const getOtpStatus = async (req: Request, res: Response): Promise<void> => {
+  const { phoneNumber } = req.query as { phoneNumber: string };
+  const ttlSeconds = await getOtpTtl(phoneNumber);
+  res.status(200).json({
+    ttlSeconds,
+    canResend: ttlSeconds === 0,
   });
 };
 
 export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
-  const { phoneNumber, otp } = verifyOtpSchema.parse(req.body);
-  const isValid = verifyStoredOtp(phoneNumber, otp);
+  const { phoneNumber, otp } = req.body as { phoneNumber: string; otp: string };
+  const isValid = await consumeOtp(phoneNumber, otp);
   if (!isValid) {
     throw new AppError("Invalid or expired OTP", 401);
   }

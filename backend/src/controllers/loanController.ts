@@ -1,9 +1,10 @@
 import type { Response } from "express";
 import type { AuthenticatedRequest } from "../middleware/auth.js";
 import { Loan } from "../models/Loan.js";
+import { uploadReceiptBuffer } from "../services/cloudinaryService.js";
+import { computeAnalytics } from "../utils/analytics.js";
 import { AppError } from "../utils/errors.js";
 import { computeSummary, isOverdue } from "../utils/summary.js";
-import { createLoanSchema } from "../validators/loan.js";
 
 const serializeLoan = (loan: Loan) => {
   return {
@@ -20,15 +21,23 @@ const serializeLoan = (loan: Loan) => {
   };
 };
 
-export const createLoan = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+const requireUserId = (req: AuthenticatedRequest): string => {
   const userId = req.user?.userId;
   if (!userId) {
     throw new AppError("Authenticated user was not found", 401);
   }
+  return userId;
+};
 
-  const payload = createLoanSchema.parse(req.body);
+export const createLoan = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const userId = requireUserId(req);
+  const payload = req.body as { friendName: string; amount: number; dueDate: Date | string };
   const receiptFile = req.file;
-  const receiptUrl = receiptFile ? `/uploads/${receiptFile.filename}` : null;
+
+  let receiptUrl: string | null = null;
+  if (receiptFile?.buffer) {
+    receiptUrl = await uploadReceiptBuffer(receiptFile.buffer, receiptFile.mimetype);
+  }
 
   const loan = await Loan.create({
     userId,
@@ -43,11 +52,7 @@ export const createLoan = async (req: AuthenticatedRequest, res: Response): Prom
 };
 
 export const listLoans = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.user?.userId;
-  if (!userId) {
-    throw new AppError("Authenticated user was not found", 401);
-  }
-
+  const userId = requireUserId(req);
   const loans = await Loan.findAll({
     where: { userId },
     order: [
@@ -56,20 +61,16 @@ export const listLoans = async (req: AuthenticatedRequest, res: Response): Promi
       ["createdAt", "DESC"],
     ],
   });
-
   res.status(200).json(loans.map(serializeLoan));
 };
 
 export const repayLoan = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.user?.userId;
-  if (!userId) {
-    throw new AppError("Authenticated user was not found", 401);
-  }
-
+  const userId = requireUserId(req);
   const id = req.params.id;
   if (!id) {
     throw new AppError("Loan id is required", 400);
   }
+
   const loan = await Loan.findOne({ where: { id, userId } });
   if (!loan) {
     throw new AppError("Loan entry was not found", 404);
@@ -84,11 +85,13 @@ export const repayLoan = async (req: AuthenticatedRequest, res: Response): Promi
 };
 
 export const getLoanSummary = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.user?.userId;
-  if (!userId) {
-    throw new AppError("Authenticated user was not found", 401);
-  }
-
+  const userId = requireUserId(req);
   const loans = await Loan.findAll({ where: { userId } });
   res.status(200).json(computeSummary(loans));
+};
+
+export const getLoanAnalytics = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const userId = requireUserId(req);
+  const loans = await Loan.findAll({ where: { userId } });
+  res.status(200).json(computeAnalytics(loans));
 };

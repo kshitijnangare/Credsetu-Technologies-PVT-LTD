@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, spacing } from "../theme";
+import { colors, fonts, spacing } from "../theme";
 import type { LoanSummary } from "../types";
 import { formatCurrency } from "../utils/format";
 
@@ -11,9 +11,9 @@ type Props = {
 export const SummaryCard = ({ summary }: Props) => {
   return (
     <View style={styles.wrap}>
-      <Metric label="Total Lent" value={summary.totalLent} tone="primary" />
-      <Metric label="Total Repaid" value={summary.totalRepaid} tone="success" />
-      <Metric label="Overdue" value={summary.overdueAmount} tone="danger" />
+      <Metric label="Lent" value={summary.totalLent} emphasized />
+      <Metric label="Repaid" value={summary.totalRepaid} />
+      <Metric label="Overdue" value={summary.overdueAmount} inverted={summary.overdueAmount > 0} />
     </View>
   );
 };
@@ -21,16 +21,18 @@ export const SummaryCard = ({ summary }: Props) => {
 const Metric = ({
   label,
   value,
-  tone,
+  emphasized,
+  inverted,
 }: {
   label: string;
   value: number;
-  tone: "primary" | "success" | "danger";
+  emphasized?: boolean;
+  inverted?: boolean;
 }) => {
   return (
-    <View style={[styles.card, toneStyles[tone]]}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{formatCurrency(value)}</Text>
+    <View style={[styles.card, inverted && styles.inverted, emphasized && !inverted && styles.emphasized]}>
+      <Text style={[styles.label, inverted && styles.invertedText]}>{label}</Text>
+      <Text style={[styles.value, inverted && styles.invertedText]}>{formatCurrency(value)}</Text>
     </View>
   );
 };
@@ -42,34 +44,33 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: spacing.sm,
+    minHeight: 78,
+    justifyContent: "space-between",
+  },
+  emphasized: {
+    backgroundColor: colors.background,
     borderWidth: 1,
+    borderColor: colors.muted,
+  },
+  inverted: {
+    backgroundColor: colors.text,
   },
   label: {
-    fontSize: 11,
+    fontFamily: fonts.regular,
+    fontSize: 12,
     color: colors.muted,
-    marginBottom: 6,
-    fontWeight: "600",
+    letterSpacing: 0.4,
   },
   value: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontFamily: fonts.regular,
+    fontSize: 15,
     color: colors.text,
+    marginTop: 8,
   },
-});
-
-const toneStyles = StyleSheet.create({
-  primary: {
-    backgroundColor: colors.primarySoft,
-    borderColor: "#C6DEDE",
-  },
-  success: {
-    backgroundColor: colors.successSoft,
-    borderColor: "#B8E6CC",
-  },
-  danger: {
-    backgroundColor: colors.dangerSoft,
-    borderColor: "#F5C2C0",
+  invertedText: {
+    color: colors.canvas,
   },
 });

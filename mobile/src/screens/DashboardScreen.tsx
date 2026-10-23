@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -10,65 +10,36 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getErrorMessage, loanApi } from "../api/client";
+import { getErrorMessage } from "../api/client";
 import { AddLoanModal } from "../components/AddLoanModal";
 import { LoanCard } from "../components/LoanCard";
+import { Sidebar } from "../components/Sidebar";
 import { SummaryCard } from "../components/SummaryCard";
-import { useAuth } from "../context/AuthContext";
-import { colors, spacing } from "../theme";
-import type { Loan, LoanSummary } from "../types";
+import { useLoanStore } from "../store/loanStore";
+import { useUiStore } from "../store/uiStore";
+import { colors, fonts, spacing } from "../theme";
 
 export const DashboardScreen = () => {
-  const { logout } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const openSidebar = useUiStore((state) => state.openSidebar);
+  const { loans, summary, loading, error, loadDashboard, createLoan, repayLoan } = useLoanStore();
   const [addOpen, setAddOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [repayingId, setRepayingId] = useState<string | null>(null);
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [summary, setSummary] = useState<LoanSummary>({
-    totalLent: 0,
-    totalRepaid: 0,
-    overdueAmount: 0,
-  });
-  const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setError(null);
-    const [loanRows, summaryRow] = await Promise.all([loanApi.list(), loanApi.summary()]);
-    setLoans(loanRows);
-    setSummary(summaryRow);
-  }, []);
-
-  React.useEffect(() => {
-    const boot = async () => {
-      try {
-        await load();
-      } catch (loadError) {
-        setError(getErrorMessage(loadError));
-      } finally {
-        setLoading(false);
-      }
-    };
-    void boot();
-  }, [load]);
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
 
   const refresh = async () => {
     setRefreshing(true);
-    try {
-      await load();
-    } catch (loadError) {
-      setError(getErrorMessage(loadError));
-    } finally {
-      setRefreshing(false);
-    }
+    await loadDashboard();
+    setRefreshing(false);
   };
 
   const repay = async (id: string) => {
     setRepayingId(id);
     try {
-      await loanApi.repay(id);
-      await load();
+      await repayLoan(id);
     } catch (repayError) {
       Alert.alert("Could not update loan", getErrorMessage(repayError));
     } finally {
@@ -79,34 +50,34 @@ export const DashboardScreen = () => {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Pressable style={styles.menuButton} onPress={() => setSidebarOpen(true)}>
+        <Pressable style={styles.menuButton} onPress={openSidebar}>
           <Text style={styles.menuIcon}>☰</Text>
         </Pressable>
-        <View>
+        <View style={styles.headerCopy}>
           <Text style={styles.kicker}>MiniLedger</Text>
-          <Text style={styles.title}>Your loans</Text>
+          <Text style={styles.title}>Loans</Text>
         </View>
         <Pressable style={styles.addChip} onPress={() => setAddOpen(true)}>
-          <Text style={styles.addChipText}>+ Add</Text>
+          <Text style={styles.addChipText}>Add</Text>
         </Pressable>
       </View>
 
-      {loading ? (
+      {loading && loans.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={colors.text} />
         </View>
       ) : (
         <ScrollView
           contentContainerStyle={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.text} />}
         >
           <SummaryCard summary={summary} />
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Text style={styles.section}>Entries</Text>
           {loans.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>No loans yet</Text>
-              <Text style={styles.emptyText}>Add money you have lent to a friend to start tracking repayments.</Text>
+              <Text style={styles.emptyTitle}>Nothing here yet</Text>
+              <Text style={styles.emptyText}>Add money you have lent. Receipt photos go to Cloudinary.</Text>
             </View>
           ) : (
             loans.map((loan) => (
@@ -116,52 +87,13 @@ export const DashboardScreen = () => {
         </ScrollView>
       )}
 
-      {sidebarOpen ? (
-        <View style={styles.overlay}>
-          <Pressable style={styles.overlayFill} onPress={() => setSidebarOpen(false)} />
-          <View style={styles.sidebar}>
-            <Text style={styles.sidebarTitle}>Menu</Text>
-            <Pressable
-              style={styles.sidebarItem}
-              onPress={() => {
-                setSidebarOpen(false);
-                void refresh();
-              }}
-            >
-              <Text style={styles.sidebarText}>Dashboard</Text>
-            </Pressable>
-            <Pressable
-              style={styles.sidebarItem}
-              onPress={() => {
-                setSidebarOpen(false);
-                setAddOpen(true);
-              }}
-            >
-              <Text style={styles.sidebarText}>Add loan</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.sidebarItem, styles.logout]}
-              onPress={() => {
-                setSidebarOpen(false);
-                void logout();
-              }}
-            >
-              <Text style={styles.logoutText}>Log out</Text>
-            </Pressable>
-            <Pressable onPress={() => setSidebarOpen(false)}>
-              <Text style={styles.closeText}>Close</Text>
-            </Pressable>
-          </View>
-        </View>
-      ) : null}
-
+      <Sidebar />
       <AddLoanModal
         visible={addOpen}
         onClose={() => setAddOpen(false)}
         onSubmit={async (payload) => {
           try {
-            await loanApi.create(payload);
-            await load();
+            await createLoan(payload);
           } catch (createError) {
             throw new Error(getErrorMessage(createError));
           }
@@ -174,7 +106,7 @@ export const DashboardScreen = () => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.canvas,
   },
   header: {
     paddingHorizontal: spacing.md,
@@ -187,35 +119,37 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
   menuIcon: {
-    color: "#FFFFFF",
+    color: colors.text,
     fontSize: 18,
-    fontWeight: "800",
+  },
+  headerCopy: {
+    flex: 1,
   },
   kicker: {
-    color: colors.accent,
-    fontWeight: "700",
+    fontFamily: fonts.regular,
+    color: colors.muted,
     fontSize: 12,
+    letterSpacing: 1,
   },
   title: {
+    fontFamily: fonts.regular,
     fontSize: 22,
-    fontWeight: "600",
-    color: colors.primary,
+    color: colors.text,
   },
   addChip: {
-    marginLeft: "auto",
-    backgroundColor: colors.accent,
+    backgroundColor: colors.text,
     borderRadius: 999,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 8,
   },
   addChipText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
+    color: colors.canvas,
+    fontFamily: fonts.regular,
   },
   content: {
     padding: spacing.md,
@@ -224,9 +158,11 @@ const styles = StyleSheet.create({
   section: {
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
-    fontSize: 16,
-    fontWeight: "800",
-    color: colors.text,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.muted,
+    letterSpacing: 1,
+    textTransform: "uppercase",
   },
   center: {
     flex: 1,
@@ -234,67 +170,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   error: {
-    color: colors.danger,
+    fontFamily: fonts.regular,
+    color: colors.text,
     marginTop: spacing.md,
   },
   empty: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderRadius: 18,
     padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   emptyTitle: {
-    fontWeight: "800",
-    color: colors.primary,
+    fontFamily: fonts.regular,
+    color: colors.text,
     marginBottom: 6,
   },
   emptyText: {
+    fontFamily: fonts.regular,
     color: colors.muted,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    flexDirection: "row",
-  },
-  overlayFill: {
-    flex: 1,
-    backgroundColor: "rgba(15, 61, 62, 0.35)",
-  },
-  sidebar: {
-    width: 250,
-    backgroundColor: colors.surface,
-    paddingTop: 48,
-    paddingHorizontal: spacing.md,
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-  },
-  sidebarTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: colors.primary,
-    marginBottom: spacing.lg,
-  },
-  sidebarItem: {
-    paddingVertical: 12,
-  },
-  sidebarText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  logout: {
-    marginTop: spacing.md,
-  },
-  logoutText: {
-    color: colors.danger,
-    fontWeight: "800",
-    fontSize: 16,
-  },
-  closeText: {
-    marginTop: spacing.lg,
-    color: colors.muted,
-    fontWeight: "600",
   },
 });
