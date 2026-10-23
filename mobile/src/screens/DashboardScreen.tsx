@@ -17,11 +17,12 @@ import { Sidebar } from "../components/Sidebar";
 import { SummaryCard } from "../components/SummaryCard";
 import { useLoanStore } from "../store/loanStore";
 import { useUiStore } from "../store/uiStore";
-import { colors, fonts, spacing } from "../theme";
+import { fonts, spacing, useTheme } from "../theme";
 
 export const DashboardScreen = () => {
   const openSidebar = useUiStore((state) => state.openSidebar);
   const { loans, summary, loading, error, loadDashboard, createLoan, repayLoan } = useLoanStore();
+  const { colors, isDark, toggleTheme } = useTheme();
   const [addOpen, setAddOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [repayingId, setRepayingId] = useState<string | null>(null);
@@ -48,23 +49,39 @@ export const DashboardScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
-      <View style={styles.header}>
-        <Pressable style={styles.menuButton} onPress={openSidebar}>
-          <Text style={styles.menuIcon}>☰</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.canvas }]} edges={["top"]}>
+      <View style={[styles.header, { backgroundColor: colors.canvas }]}>
+        <Pressable
+          style={[styles.menuButton, { backgroundColor: colors.background, borderColor: colors.border }]}
+          onPress={openSidebar}
+        >
+          <Text style={[styles.menuIcon, { color: colors.text }]}>☰</Text>
         </Pressable>
+
         <View style={styles.headerCopy}>
-          <Text style={styles.kicker}>MINILEDGER</Text>
-          <Text style={styles.title}>Loans</Text>
+          <Text style={[styles.kicker, { color: colors.primary }]}>MINILEDGER</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Loans</Text>
         </View>
-        <Pressable style={styles.addChip} onPress={() => setAddOpen(true)}>
-          <Text style={styles.addChipText}>+ New</Text>
+
+        {/* Quick Theme Toggle */}
+        <Pressable
+          style={[styles.themeBtn, { backgroundColor: colors.background, borderColor: colors.border }]}
+          onPress={toggleTheme}
+        >
+          <Text style={styles.themeBtnText}>{isDark ? "☀️" : "🌙"}</Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.addChip, { backgroundColor: colors.primary }]}
+          onPress={() => setAddOpen(true)}
+        >
+          <Text style={[styles.addChipText, { color: colors.primaryText }]}>+ New</Text>
         </Pressable>
       </View>
 
       {loading && loans.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator color={colors.teal} size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
         </View>
       ) : (
         <ScrollView
@@ -73,24 +90,28 @@ export const DashboardScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => void refresh()}
-              tintColor={colors.teal}
+              tintColor={colors.primary}
             />
           }
         >
           <SummaryCard summary={summary} />
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={[styles.error, { color: colors.text }]}>{error}</Text> : null}
 
           <View style={styles.sectionRow}>
-            <Text style={styles.section}>All Entries</Text>
-            <Text style={styles.countBadge}>{loans.length}</Text>
+            <Text style={[styles.section, { color: colors.text }]}>All Entries</Text>
+            <View style={[styles.countBadge, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <Text style={[styles.countText, { color: colors.text }]}>{loans.length}</Text>
+            </View>
           </View>
 
           {loans.length === 0 ? (
-            <View style={styles.empty}>
+            <View style={[styles.empty, { backgroundColor: colors.background, borderColor: colors.border }]}>
               <Text style={styles.emptyIcon}>💸</Text>
-              <Text style={styles.emptyTitle}>No loans recorded yet</Text>
-              <Text style={styles.emptyText}>Tap "+ New" above to record money lent with an optional receipt.</Text>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No loans recorded yet</Text>
+              <Text style={[styles.emptyText, { color: colors.muted }]}>
+                Tap "+ New" above to record money lent with an optional receipt.
+              </Text>
             </View>
           ) : (
             loans.map((loan) => (
@@ -124,7 +145,6 @@ export const DashboardScreen = () => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.canvas,
   },
   header: {
     paddingHorizontal: spacing.md,
@@ -134,41 +154,46 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   menuButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
   },
   menuIcon: {
-    color: colors.ice,
-    fontSize: 20,
+    fontSize: 22,
+    fontFamily: fonts.bold,
   },
   headerCopy: {
     flex: 1,
   },
   kicker: {
-    fontFamily: fonts.semiBold,
-    color: colors.teal,
+    fontFamily: fonts.bold,
     fontSize: 11,
     letterSpacing: 1.5,
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 22,
-    color: colors.ice,
+    fontSize: 24,
+  },
+  themeBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+  },
+  themeBtnText: {
+    fontSize: 18,
   },
   addChip: {
-    backgroundColor: colors.teal,
-    borderRadius: 999,
+    borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   addChipText: {
-    color: colors.canvas,
     fontFamily: fonts.bold,
     fontSize: 13,
   },
@@ -184,20 +209,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   section: {
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-    color: colors.mint,
+    fontFamily: fonts.bold,
+    fontSize: 14,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
   countBadge: {
-    fontFamily: fonts.medium,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1.5,
+  },
+  countText: {
+    fontFamily: fonts.bold,
     fontSize: 12,
-    color: colors.teal,
-    backgroundColor: "rgba(76, 167, 161, 0.12)",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
   },
   center: {
     flex: 1,
@@ -205,18 +230,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   error: {
-    fontFamily: fonts.medium,
-    color: "#FF8E8E",
+    fontFamily: fonts.semiBold,
     marginTop: spacing.md,
     fontSize: 13,
   },
   empty: {
-    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: spacing.xl,
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
     marginTop: spacing.sm,
   },
   emptyIcon: {
@@ -225,13 +247,11 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontFamily: fonts.bold,
-    color: colors.ice,
-    fontSize: 16,
+    fontSize: 17,
     marginBottom: 6,
   },
   emptyText: {
-    fontFamily: fonts.regular,
-    color: colors.mint,
+    fontFamily: fonts.medium,
     textAlign: "center",
     fontSize: 13,
     lineHeight: 18,

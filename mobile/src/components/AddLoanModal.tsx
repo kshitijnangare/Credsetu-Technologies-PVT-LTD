@@ -13,7 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { colors, fonts, spacing } from "../theme";
+import { fonts, spacing, useTheme } from "../theme";
 import { toIsoDate } from "../utils/format";
 
 type Props = {
@@ -28,6 +28,7 @@ type Props = {
 };
 
 export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
+  const { colors, isDark } = useTheme();
   const [friendName, setFriendName] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState(new Date());
@@ -97,20 +98,20 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={styles.sheet}>
-          <Text style={styles.title}>New Loan Entry</Text>
-          <Text style={styles.hint}>Track money lent and keep an optional receipt photo.</Text>
+      <View style={[styles.backdrop, { backgroundColor: isDark ? "rgba(11, 18, 17, 0.8)" : "rgba(76, 167, 161, 0.4)" }]}>
+        <View style={[styles.sheet, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <Text style={[styles.title, { color: colors.text }]}>New Loan Entry</Text>
+          <Text style={[styles.hint, { color: colors.muted }]}>Track money lent and keep an optional receipt photo.</Text>
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
             placeholder="Friend's Name"
             placeholderTextColor={colors.muted}
             value={friendName}
             onChangeText={setFriendName}
           />
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
             placeholder="Amount (₹)"
             placeholderTextColor={colors.muted}
             keyboardType="decimal-pad"
@@ -118,8 +119,11 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
             onChangeText={setAmount}
           />
 
-          <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
-            <Text style={styles.dateText}>📅 Due Date: {dueDateLabel}</Text>
+          <Pressable
+            style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => setShowPicker(true)}
+          >
+            <Text style={[styles.dateText, { color: colors.text }]}>📅 Due Date: {dueDateLabel}</Text>
           </Pressable>
 
           {showPicker ? (
@@ -133,44 +137,61 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
                   setDueDate(selected);
                 }
               }}
-              themeVariant="dark"
+              themeVariant={isDark ? "dark" : "light"}
             />
           ) : null}
 
           {/* Receipt Selection & Preview */}
           {receiptUri ? (
-            <View style={styles.previewBox}>
+            <View style={[styles.previewBox, { backgroundColor: colors.surface, borderColor: colors.primary }]}>
               <Image
                 source={{ uri: receiptUri }}
                 style={styles.previewImg}
                 resizeMode="cover"
               />
               <View style={styles.previewOverlay}>
-                <Pressable style={styles.changeBtn} onPress={() => void pickReceipt()}>
-                  <Text style={styles.changeBtnText}>Change</Text>
+                <Pressable
+                  style={[styles.changeBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => void pickReceipt()}
+                >
+                  <Text style={[styles.changeBtnText, { color: colors.text }]}>Change</Text>
                 </Pressable>
-                <Pressable style={styles.removeBtn} onPress={() => setReceiptUri(null)}>
-                  <Text style={styles.removeBtnText}>✕ Remove</Text>
+                <Pressable
+                  style={[styles.removeBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => setReceiptUri(null)}
+                >
+                  <Text style={[styles.removeBtnText, { color: colors.primary }]}>✕ Remove</Text>
                 </Pressable>
               </View>
             </View>
           ) : (
-            <Pressable style={styles.receiptButton} onPress={() => void pickReceipt()}>
-              <Text style={styles.receiptText}>📎 Attach Receipt Photo</Text>
+            <Pressable
+              style={[styles.receiptButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => void pickReceipt()}
+            >
+              <Text style={[styles.receiptText, { color: colors.text }]}>📎 Attach Receipt Photo</Text>
             </Pressable>
           )}
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={[styles.error, { color: colors.primary }]}>{error}</Text> : null}
 
           <View style={styles.actions}>
-            <Pressable style={styles.secondary} onPress={onClose} disabled={submitting}>
-              <Text style={styles.secondaryText}>Cancel</Text>
+            <Pressable
+              style={[styles.secondary, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={onClose}
+              disabled={submitting}
+            >
+              <Text style={[styles.secondaryText, { color: colors.text }]}>Cancel</Text>
             </Pressable>
-            <Pressable style={styles.primary} onPress={() => void handleSubmit()} disabled={submitting}>
+            <Pressable
+              style={[styles.primary, { backgroundColor: colors.primary }]}
+              onPress={() => void handleSubmit()}
+              disabled={submitting}
+            >
               {submitting ? (
-                <ActivityIndicator color={colors.primaryDark} size="small" />
+                <ActivityIndicator color={colors.primaryText} size="small" />
               ) : (
-                <Text style={styles.primaryText}>Save Loan</Text>
+                <Text style={[styles.primaryText, { color: colors.primaryText }]}>Save Loan</Text>
               )}
             </Pressable>
           </View>
@@ -183,58 +204,46 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(11, 18, 17, 0.75)",
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: colors.background,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
   },
   title: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.ice,
   },
   hint: {
-    fontFamily: fonts.regular,
-    color: colors.mint,
+    fontFamily: fonts.medium,
     marginTop: 4,
     marginBottom: spacing.md,
     fontSize: 13,
   },
   input: {
-    backgroundColor: colors.surface,
     borderRadius: 14,
     paddingHorizontal: spacing.md,
     paddingVertical: 14,
     marginBottom: spacing.sm,
-    color: colors.ice,
-    fontFamily: fonts.regular,
-    borderWidth: 1,
-    borderColor: colors.border,
+    fontFamily: fonts.medium,
+    borderWidth: 1.5,
   },
   dateText: {
-    color: colors.ice,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 14,
   },
   receiptButton: {
-    borderWidth: 1,
-    borderColor: colors.teal,
+    borderWidth: 2,
     borderStyle: "dashed",
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
     marginBottom: spacing.sm,
-    backgroundColor: "rgba(76, 167, 161, 0.08)",
   },
   receiptText: {
-    color: colors.ice,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 14,
   },
   previewBox: {
@@ -243,9 +252,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: "hidden",
     marginBottom: spacing.sm,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.teal,
+    borderWidth: 2,
     position: "relative",
   },
   previewImg: {
@@ -260,36 +267,30 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   changeBtn: {
-    backgroundColor: "rgba(18, 28, 27, 0.85)",
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: colors.mint,
+    borderWidth: 1.5,
   },
   changeBtnText: {
-    color: colors.ice,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 12,
   },
   removeBtn: {
-    backgroundColor: "rgba(18, 28, 27, 0.85)",
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: "rgba(255, 123, 123, 0.5)",
+    borderWidth: 1.5,
   },
   removeBtnText: {
-    color: "#FF8E8E",
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 12,
   },
   error: {
-    color: "#FF8E8E",
-    fontFamily: fonts.regular,
+    fontFamily: fonts.bold,
     fontSize: 13,
     marginBottom: spacing.sm,
+    textDecorationLine: "underline",
   },
   actions: {
     flexDirection: "row",
@@ -299,26 +300,21 @@ const styles = StyleSheet.create({
   secondary: {
     flex: 1,
     borderRadius: 14,
-    backgroundColor: colors.surface,
     alignItems: "center",
     paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
   },
   secondaryText: {
-    color: colors.mint,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 14,
   },
   primary: {
     flex: 1,
     borderRadius: 14,
-    backgroundColor: colors.teal,
     alignItems: "center",
     paddingVertical: 14,
   },
   primaryText: {
-    color: colors.canvas,
     fontFamily: fonts.bold,
     fontSize: 14,
   },

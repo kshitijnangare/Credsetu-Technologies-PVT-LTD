@@ -1,10 +1,22 @@
-export const colors = {
-  // STRICT 3 COLORS ONLY (Light Mode):
-  ice: "#CEFEF1",       // Light canvas / button text / surface
-  mint: "#A6D6C9",      // Cards / containers / secondary surfaces
-  teal: "#4CA7A1",      // High contrast text / borders / buttons / icons
+import { useUiStore } from "./store/uiStore";
 
-  // Semantic Light Mode tokens strictly mapped to the 3 colors
+export const darkColors = {
+  mode: "dark" as const,
+  canvas: "#0B1211",
+  background: "#121C1B",
+  surface: "#182624",
+  border: "#2A403D",
+  text: "#CEFEF1",
+  muted: "#A6D6C9",
+  primary: "#4CA7A1",
+  primaryText: "#0B1211",
+  ice: "#CEFEF1",
+  mint: "#A6D6C9",
+  teal: "#4CA7A1",
+};
+
+export const lightColors = {
+  mode: "light" as const,
   canvas: "#CEFEF1",
   background: "#A6D6C9",
   surface: "#CEFEF1",
@@ -13,7 +25,31 @@ export const colors = {
   muted: "#4CA7A1",
   primary: "#4CA7A1",
   primaryText: "#CEFEF1",
-} as const;
+  ice: "#CEFEF1",
+  mint: "#A6D6C9",
+  teal: "#4CA7A1",
+};
+
+export type ThemeColors = typeof darkColors;
+
+// Default is Dark Mode
+export const colors = darkColors;
+
+export const getThemeColors = (mode: "dark" | "light"): ThemeColors =>
+  mode === "dark" ? darkColors : lightColors;
+
+export const useTheme = () => {
+  const themeMode = useUiStore((state) => state.themeMode);
+  const toggleTheme = useUiStore((state) => state.toggleTheme);
+  const colors = getThemeColors(themeMode);
+
+  return {
+    colors,
+    themeMode,
+    isDark: themeMode === "dark",
+    toggleTheme,
+  };
+};
 
 export const fonts = {
   regular: "Sora_400Regular",

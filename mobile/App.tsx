@@ -11,10 +11,13 @@ import {
 } from "@expo-google-fonts/sora";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { useAuthStore } from "./src/store/authStore";
-import { colors } from "./src/theme";
+import { useUiStore } from "./src/store/uiStore";
+import { useTheme } from "./src/theme";
 
 export default function App() {
-  const hydrate = useAuthStore((state) => state.hydrate);
+  const hydrateAuth = useAuthStore((state) => state.hydrate);
+  const hydrateTheme = useUiStore((state) => state.hydrateTheme);
+  const { colors, themeMode } = useTheme();
 
   const [fontsLoaded] = useFonts({
     Sora_400Regular,
@@ -24,12 +27,13 @@ export default function App() {
   });
 
   useEffect(() => {
-    void hydrate();
-  }, [hydrate]);
+    void hydrateAuth();
+    void hydrateTheme();
+  }, [hydrateAuth, hydrateTheme]);
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.loading}>
+      <View style={[styles.loading, { backgroundColor: colors.canvas }]}>
         <ActivityIndicator color={colors.teal} size="large" />
       </View>
     );
@@ -37,7 +41,7 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
+      <StatusBar style={themeMode === "dark" ? "light" : "dark"} />
       <RootNavigator />
     </SafeAreaProvider>
   );
@@ -46,7 +50,6 @@ export default function App() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    backgroundColor: colors.canvas,
     alignItems: "center",
     justifyContent: "center",
   },

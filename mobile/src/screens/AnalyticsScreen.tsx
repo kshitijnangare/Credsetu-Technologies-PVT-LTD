@@ -12,12 +12,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Sidebar } from "../components/Sidebar";
 import { useLoanStore } from "../store/loanStore";
 import { useUiStore } from "../store/uiStore";
-import { colors, fonts, spacing } from "../theme";
+import { fonts, spacing, useTheme } from "../theme";
 import { formatCurrency, monthLabel } from "../utils/format";
 
 export const AnalyticsScreen = () => {
   const openSidebar = useUiStore((state) => state.openSidebar);
   const { analytics, loading, error, loadAnalytics } = useLoanStore();
+  const { colors, isDark, toggleTheme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -38,20 +39,32 @@ export const AnalyticsScreen = () => {
     : 1;
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
-      <View style={styles.header}>
-        <Pressable style={styles.menuButton} onPress={openSidebar}>
-          <Text style={styles.menuIcon}>☰</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.canvas }]} edges={["top"]}>
+      <View style={[styles.header, { backgroundColor: colors.canvas }]}>
+        <Pressable
+          style={[styles.menuButton, { backgroundColor: colors.background, borderColor: colors.border }]}
+          onPress={openSidebar}
+        >
+          <Text style={[styles.menuIcon, { color: colors.text }]}>☰</Text>
         </Pressable>
+
         <View style={styles.headerCopy}>
-          <Text style={styles.kicker}>MINILEDGER</Text>
-          <Text style={styles.title}>Analytics</Text>
+          <Text style={[styles.kicker, { color: colors.primary }]}>MINILEDGER</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Analytics</Text>
         </View>
+
+        {/* Quick Theme Toggle */}
+        <Pressable
+          style={[styles.themeBtn, { backgroundColor: colors.background, borderColor: colors.border }]}
+          onPress={toggleTheme}
+        >
+          <Text style={styles.themeBtnText}>{isDark ? "☀️" : "🌙"}</Text>
+        </Pressable>
       </View>
 
       {loading && !analytics ? (
         <View style={styles.center}>
-          <ActivityIndicator color={colors.teal} size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
         </View>
       ) : (
         <ScrollView
@@ -60,68 +73,67 @@ export const AnalyticsScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => void refresh()}
-              tintColor={colors.teal}
+              tintColor={colors.primary}
             />
           }
         >
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={[styles.error, { color: colors.text }]}>{error}</Text> : null}
 
           {/* Status Breakdown Grid */}
-          <Text style={styles.section}>Status Overview</Text>
+          <Text style={[styles.section, { color: colors.text }]}>Status Overview</Text>
           <View style={styles.grid}>
-            <View style={styles.cardSmall}>
-              <Text style={styles.metricLabel}>Total Loans</Text>
-              <Text style={styles.metricVal}>{analytics?.counts.total ?? 0}</Text>
+            <View style={[styles.cardSmall, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <Text style={[styles.metricLabel, { color: colors.muted }]}>Total Loans</Text>
+              <Text style={[styles.metricVal, { color: colors.text }]}>{analytics?.counts.total ?? 0}</Text>
             </View>
-            <View style={styles.cardSmall}>
-              <Text style={styles.metricLabel}>Active</Text>
-              <Text style={[styles.metricVal, { color: colors.ice }]}>{analytics?.counts.pending ?? 0}</Text>
+            <View style={[styles.cardSmall, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <Text style={[styles.metricLabel, { color: colors.muted }]}>Active</Text>
+              <Text style={[styles.metricVal, { color: colors.text }]}>{analytics?.counts.pending ?? 0}</Text>
             </View>
-            <View style={styles.cardSmall}>
-              <Text style={styles.metricLabel}>Repaid</Text>
-              <Text style={[styles.metricVal, { color: colors.teal }]}>{analytics?.counts.repaid ?? 0}</Text>
+            <View style={[styles.cardSmall, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <Text style={[styles.metricLabel, { color: colors.muted }]}>Repaid</Text>
+              <Text style={[styles.metricVal, { color: colors.primary }]}>{analytics?.counts.repaid ?? 0}</Text>
             </View>
-            <View style={[styles.cardSmall, (analytics?.counts.overdue ?? 0) > 0 && styles.overdueBorder]}>
-              <Text style={[styles.metricLabel, (analytics?.counts.overdue ?? 0) > 0 && { color: "#FF8E8E" }]}>
-                Overdue
-              </Text>
-              <Text
-                style={[
-                  styles.metricVal,
-                  (analytics?.counts.overdue ?? 0) > 0 && { color: "#FF8E8E" },
-                ]}
-              >
-                {analytics?.counts.overdue ?? 0}
-              </Text>
+            <View
+              style={[
+                styles.cardSmall,
+                { backgroundColor: colors.background, borderColor: colors.border },
+                (analytics?.counts.overdue ?? 0) > 0 && { borderWidth: 2, borderColor: colors.primary },
+              ]}
+            >
+              <Text style={[styles.metricLabel, { color: colors.muted }]}>Overdue</Text>
+              <Text style={[styles.metricVal, { color: colors.primary }]}>{analytics?.counts.overdue ?? 0}</Text>
             </View>
           </View>
 
           {/* Capital Allocation Card */}
-          <Text style={styles.section}>Capital Balance</Text>
-          <View style={styles.balanceCard}>
+          <Text style={[styles.section, { color: colors.text }]}>Capital Balance</Text>
+          <View style={[styles.balanceCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
             <View style={styles.balanceRow}>
-              <Text style={styles.balanceLabel}>Total Lent</Text>
-              <Text style={styles.balanceValue}>{formatCurrency(analytics?.summary.totalLent ?? 0)}</Text>
+              <Text style={[styles.balanceLabel, { color: colors.muted }]}>Total Lent</Text>
+              <Text style={[styles.balanceValue, { color: colors.text }]}>
+                {formatCurrency(analytics?.summary.totalLent ?? 0)}
+              </Text>
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.balanceRow}>
-              <Text style={styles.balanceLabel}>Total Repaid</Text>
-              <Text style={[styles.balanceValue, { color: colors.teal }]}>
+              <Text style={[styles.balanceLabel, { color: colors.muted }]}>Total Repaid</Text>
+              <Text style={[styles.balanceValue, { color: colors.primary }]}>
                 {formatCurrency(analytics?.summary.totalRepaid ?? 0)}
               </Text>
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.balanceRow}>
-              <Text style={styles.balanceLabel}>Overdue Amount</Text>
-              <Text style={[styles.balanceValue, (analytics?.summary.overdueAmount ?? 0) > 0 && styles.overdueValue]}>
+              <Text style={[styles.balanceLabel, { color: colors.muted }]}>Overdue Amount</Text>
+              <Text style={[styles.balanceValue, { color: colors.primary, textDecorationLine: "underline" }]}>
                 {formatCurrency(analytics?.summary.overdueAmount ?? 0)}
               </Text>
             </View>
           </View>
 
           {/* Monthly Trajectory */}
-          <Text style={styles.section}>6-Month Activity</Text>
-          <View style={styles.card}>
+          <Text style={[styles.section, { color: colors.text }]}>6-Month Activity</Text>
+          <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
             {analytics?.monthly && analytics.monthly.length > 0 ? (
               analytics.monthly.map((point) => {
                 const lentRatio = Math.min(1, point.lent / maxMonthlyAmount);
@@ -129,54 +141,57 @@ export const AnalyticsScreen = () => {
 
                 return (
                   <View key={point.month} style={styles.monthRow}>
-                    <Text style={styles.monthTitle}>{monthLabel(point.month)}</Text>
+                    <Text style={[styles.monthTitle, { color: colors.text }]}>{monthLabel(point.month)}</Text>
                     <View style={styles.barStack}>
-                      <View style={styles.barLine}>
-                        <View style={[styles.barFillLent, { flex: Math.max(0.03, lentRatio) }]} />
+                      <View style={[styles.barLine, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                        <View style={[styles.barFillLent, { backgroundColor: colors.primary, flex: Math.max(0.04, lentRatio) }]} />
                         <View style={{ flex: Math.max(0, 1 - lentRatio) }} />
-                        <Text style={styles.barText}>{formatCurrency(point.lent)}</Text>
+                        <Text style={[styles.barText, { color: colors.text }]}>{formatCurrency(point.lent)}</Text>
                       </View>
-                      <View style={styles.barLine}>
-                        <View style={[styles.barFillRepaid, { flex: Math.max(0.03, repaidRatio) }]} />
+                      <View style={[styles.barLine, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                        <View style={[styles.barFillRepaid, { backgroundColor: colors.muted, flex: Math.max(0.04, repaidRatio) }]} />
                         <View style={{ flex: Math.max(0, 1 - repaidRatio) }} />
-                        <Text style={styles.barTextRepaid}>{formatCurrency(point.repaid)}</Text>
+                        <Text style={[styles.barTextRepaid, { color: colors.text }]}>{formatCurrency(point.repaid)}</Text>
                       </View>
                     </View>
                   </View>
                 );
               })
             ) : (
-              <Text style={styles.emptyText}>No monthly history available yet.</Text>
+              <Text style={[styles.emptyText, { color: colors.muted }]}>No monthly history available yet.</Text>
             )}
             <View style={styles.legend}>
               <View style={styles.legendItem}>
-                <View style={styles.legendDotLent} />
-                <Text style={styles.legendText}>Lent</Text>
+                <View style={[styles.legendDotLent, { backgroundColor: colors.primary }]} />
+                <Text style={[styles.legendText, { color: colors.text }]}>Lent</Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={styles.legendDotRepaid} />
-                <Text style={styles.legendText}>Repaid</Text>
+                <View style={[styles.legendDotRepaid, { backgroundColor: colors.muted }]} />
+                <Text style={[styles.legendText, { color: colors.text }]}>Repaid</Text>
               </View>
             </View>
           </View>
 
-          {/* Top Friends with Outstanding Balances */}
-          <Text style={styles.section}>Top Outstanding Borrowers</Text>
+          {/* Top Borrowers */}
+          <Text style={[styles.section, { color: colors.text }]}>Top Outstanding Borrowers</Text>
           {analytics?.topFriends && analytics.topFriends.length > 0 ? (
             analytics.topFriends.map((friend) => (
-              <View key={friend.friendName} style={styles.friendCard}>
+              <View
+                key={friend.friendName}
+                style={[styles.friendCard, { backgroundColor: colors.background, borderColor: colors.border }]}
+              >
                 <View style={styles.friendInfo}>
-                  <Text style={styles.friendName}>{friend.friendName}</Text>
-                  <Text style={styles.friendMeta}>
+                  <Text style={[styles.friendName, { color: colors.text }]}>{friend.friendName}</Text>
+                  <Text style={[styles.friendMeta, { color: colors.muted }]}>
                     {friend.loanCount} {friend.loanCount === 1 ? "loan" : "loans"}
                   </Text>
                 </View>
-                <Text style={styles.friendAmount}>{formatCurrency(friend.outstanding)}</Text>
+                <Text style={[styles.friendAmount, { color: colors.primary }]}>{formatCurrency(friend.outstanding)}</Text>
               </View>
             ))
           ) : (
-            <View style={styles.card}>
-              <Text style={styles.emptyText}>🎉 No outstanding balances with friends!</Text>
+            <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <Text style={[styles.emptyText, { color: colors.muted }]}>No outstanding balances with friends!</Text>
             </View>
           )}
         </ScrollView>
@@ -190,7 +205,6 @@ export const AnalyticsScreen = () => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.canvas,
   },
   header: {
     paddingHorizontal: spacing.md,
@@ -200,32 +214,39 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   menuButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
   },
   menuIcon: {
-    color: colors.ice,
-    fontSize: 20,
+    fontSize: 22,
+    fontFamily: fonts.bold,
   },
   headerCopy: {
     flex: 1,
   },
   kicker: {
-    fontFamily: fonts.semiBold,
-    color: colors.teal,
+    fontFamily: fonts.bold,
     fontSize: 11,
     letterSpacing: 1.5,
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 22,
-    color: colors.ice,
+    fontSize: 24,
+  },
+  themeBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+  },
+  themeBtnText: {
+    fontSize: 18,
   },
   content: {
     padding: spacing.md,
@@ -234,9 +255,8 @@ const styles = StyleSheet.create({
   section: {
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bold,
     fontSize: 13,
-    color: colors.mint,
     letterSpacing: 1,
     textTransform: "uppercase",
   },
@@ -246,8 +266,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   error: {
-    fontFamily: fonts.medium,
-    color: "#FF8E8E",
+    fontFamily: fonts.semiBold,
     marginBottom: spacing.sm,
   },
   grid: {
@@ -256,34 +275,24 @@ const styles = StyleSheet.create({
   },
   cardSmall: {
     flex: 1,
-    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: spacing.sm,
     minHeight: 74,
     justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  overdueBorder: {
-    borderColor: "rgba(255, 123, 123, 0.4)",
-    backgroundColor: "rgba(255, 123, 123, 0.08)",
+    borderWidth: 1.5,
   },
   metricLabel: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 11,
-    color: colors.mint,
   },
   metricVal: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.ice,
   },
   balanceCard: {
-    backgroundColor: colors.surface,
     borderRadius: 18,
     padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
   },
   balanceRow: {
     flexDirection: "row",
@@ -292,37 +301,28 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   divider: {
-    height: 1,
-    backgroundColor: "rgba(166, 214, 201, 0.12)",
+    height: 1.5,
     marginVertical: 2,
   },
   balanceLabel: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 14,
-    color: colors.mint,
   },
   balanceValue: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.ice,
-  },
-  overdueValue: {
-    color: "#FF8E8E",
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: 18,
     padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
   },
   monthRow: {
     marginBottom: spacing.sm,
   },
   monthTitle: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 12,
-    color: colors.mint,
     marginBottom: 4,
   },
   barStack: {
@@ -332,33 +332,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     height: 18,
-    backgroundColor: colors.background,
     borderRadius: 8,
     overflow: "hidden",
+    borderWidth: 1,
   },
   barFillLent: {
     height: "100%",
-    backgroundColor: colors.ice,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   barFillRepaid: {
     height: "100%",
-    backgroundColor: colors.teal,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   barText: {
     position: "absolute",
     right: 8,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 10,
-    color: colors.canvas,
   },
   barTextRepaid: {
     position: "absolute",
     right: 8,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bold,
     fontSize: 10,
-    color: colors.ice,
   },
   legend: {
     flexDirection: "row",
@@ -376,52 +372,43 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.ice,
   },
   legendDotRepaid: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.teal,
   },
   legendText: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.bold,
     fontSize: 12,
-    color: colors.mint,
   },
   friendCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: spacing.md,
     marginBottom: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
   },
   friendInfo: {
     flex: 1,
   },
   friendName: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bold,
     fontSize: 15,
-    color: colors.ice,
   },
   friendMeta: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     fontSize: 12,
-    color: colors.mint,
     marginTop: 2,
   },
   friendAmount: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.teal,
   },
   emptyText: {
-    fontFamily: fonts.regular,
-    color: colors.mint,
+    fontFamily: fonts.medium,
     fontSize: 13,
   },
 });

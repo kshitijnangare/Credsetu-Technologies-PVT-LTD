@@ -5,17 +5,18 @@ import { DashboardScreen } from "../screens/DashboardScreen";
 import { LoginScreen } from "../screens/LoginScreen";
 import { useAuthStore } from "../store/authStore";
 import { useUiStore } from "../store/uiStore";
-import { colors } from "../theme";
+import { useTheme } from "../theme";
 
 export const RootNavigator = () => {
   const token = useAuthStore((state) => state.token);
   const booting = useAuthStore((state) => state.booting);
   const screen = useUiStore((state) => state.screen);
+  const { colors } = useTheme();
 
   if (booting) {
     return (
-      <View style={styles.boot}>
-        <ActivityIndicator color={colors.teal} size="large" />
+      <View style={[styles.boot, { backgroundColor: colors.canvas }]}>
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
@@ -30,7 +31,6 @@ export const RootNavigator = () => {
 const styles = StyleSheet.create({
   boot: {
     flex: 1,
-    backgroundColor: colors.canvas,
     alignItems: "center",
     justifyContent: "center",
   },

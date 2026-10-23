@@ -201,20 +201,35 @@ graph LR
 
 ---
 
-## 7. Modern Fintech Design System & Sora Typography
+## 7. Dual Theme System (Dark & Light Mode Toggle) & Sora Typography
 
-The mobile interface is styled with a modern fintech palette based on three curated colors:
-- **`#CEFEF1` (Mint Ice)**: Luminous high-contrast text, major monetary figures, active highlights.
-- **`#A6D6C9` (Soft Sage)**: Subtitles, field labels, metadata, subtle borders, and secondary buttons.
-- **`#4CA7A1` (Ocean Teal)**: Primary CTA buttons, active navigation chips, accent borders, progress indicators.
-- **`#0B1211` / `#121C1B` / `#182624`**: Deep obsidian-teal layered dark backgrounds harmonized with the teal palette.
+MiniLedger features a responsive **Theme Toggle** defaulting to **Dark Mode** with immediate persistence via `AsyncStorage`:
+
+### Theme Modes (Strictly Using `#CEFEF1`, `#A6D6C9`, and `#4CA7A1`):
+- **Dark Mode (Default)**:
+  - **Canvas & Backdrops**: `#0B1211` / `#121C1B` / `#182624`
+  - **Headings & High-Contrast Text**: `#CEFEF1` (Mint Ice)
+  - **Subtitles & Badges**: `#A6D6C9` (Sage Mint)
+  - **CTA Buttons & Accents**: `#4CA7A1` (Ocean Teal)
+  - **Status Bar**: `light`
+
+- **Light Mode**:
+  - **Canvas & Screen Background**: `#CEFEF1` (Mint Ice)
+  - **Card Containers & Drawers**: `#A6D6C9` (Sage Mint)
+  - **Text, Borders & CTA Buttons**: `#4CA7A1` (Ocean Teal)
+  - **Status Bar**: `dark`
+
+### Theme Toggle Locations:
+1. **Sidebar Drawer**: Interactive "☀️ Light Theme" / "🌙 Dark Theme" toggle pill.
+2. **Dashboard & Analytics Headers**: One-tap quick sun/moon (`☀️ / 🌙`) icon toggle.
+3. **Login Screen**: Quick toggle chip in the top brand banner.
 
 ### Typography (Sora)
 - Integrated via `@expo-google-fonts/sora`:
-  - `Sora_400Regular`: Clean input fields, body text, and subtitles.
-  - `Sora_500Medium`: Form labels, button text, and timestamps.
-  - `Sora_600SemiBold`: Card titles, badges, and section headers.
-  - `Sora_700Bold`: Main screen titles, brand kicker, and total balances.
+  - `Sora_400Regular`: Input fields and descriptions.
+  - `Sora_500Medium`: Timestamps, countdown timers, and field labels.
+  - `Sora_600SemiBold`: Overdue indicators, section headers, and subtitle text.
+  - `Sora_700Bold`: Main balances, brand titles, screen headings, and primary CTA buttons.
 
 ---
 
