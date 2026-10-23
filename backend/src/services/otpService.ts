@@ -15,7 +15,7 @@ export const issueOtp = async (phoneNumber: string): Promise<IssuedOtp> => {
   const hashed = hashOtp(otp, env.otpHashSecret);
   const ttlSeconds = env.otpTtlSeconds;
 
-  await redis.set(key, hashed, { ex: ttlSeconds });
+  await redis.set(key, hashed, "EX", ttlSeconds);
 
   return { otp, ttlSeconds };
 };
@@ -27,7 +27,7 @@ export const getOtpTtl = async (phoneNumber: string): Promise<number> => {
 
 export const consumeOtp = async (phoneNumber: string, otp: string): Promise<boolean> => {
   const key = otpKey(phoneNumber);
-  const storedHash = await redis.get<string>(key);
+  const storedHash = await redis.get(key);
   if (!storedHash) {
     return false;
   }

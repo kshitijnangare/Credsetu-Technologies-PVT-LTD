@@ -1,14 +1,25 @@
 export const colors = {
-  canvas: "#1A1A1A",
-  background: "#222526",
-  surface: "#363A3E",
-  text: "#E0E0E0",
-  muted: "#BFBFBF",
+  // STRICT 3 COLORS ONLY (Light Mode):
+  ice: "#CEFEF1",       // Light canvas / button text / surface
+  mint: "#A6D6C9",      // Cards / containers / secondary surfaces
+  teal: "#4CA7A1",      // High contrast text / borders / buttons / icons
+
+  // Semantic Light Mode tokens strictly mapped to the 3 colors
+  canvas: "#CEFEF1",
+  background: "#A6D6C9",
+  surface: "#CEFEF1",
+  border: "#4CA7A1",
+  text: "#4CA7A1",
+  muted: "#4CA7A1",
+  primary: "#4CA7A1",
+  primaryText: "#CEFEF1",
 } as const;
 
 export const fonts = {
-  regular: "PTSans_400Regular",
-  bold: "PTSans_700Bold",
+  regular: "Sora_400Regular",
+  medium: "Sora_500Medium",
+  semiBold: "Sora_600SemiBold",
+  bold: "Sora_700Bold",
 } as const;
 
 export const spacing = {

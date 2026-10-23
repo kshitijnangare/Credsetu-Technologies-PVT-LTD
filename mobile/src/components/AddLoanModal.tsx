@@ -2,6 +2,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import React, { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Modal,
@@ -46,17 +47,22 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
   };
 
   const pickReceipt = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permission needed", "Allow photo access to attach a Cloudinary receipt.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
-    });
-    if (!result.canceled && result.assets[0]) {
-      setReceiptUri(result.assets[0].uri);
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("Permission required", "Please grant photo library access to upload a receipt.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets[0]?.uri) {
+        setReceiptUri(result.assets[0].uri);
+      }
+    } catch (pickerErr) {
+      Alert.alert("Image error", "Could not select the image. Please try again.");
     }
   };
 
@@ -93,26 +99,29 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
-          <Text style={styles.title}>New entry</Text>
-          <Text style={styles.hint}>Receipts are uploaded to Cloudinary and stored as a URL on the loan.</Text>
+          <Text style={styles.title}>New Loan Entry</Text>
+          <Text style={styles.hint}>Track money lent and keep an optional receipt photo.</Text>
+
           <TextInput
             style={styles.input}
-            placeholder="Friend's name"
+            placeholder="Friend's Name"
             placeholderTextColor={colors.muted}
             value={friendName}
             onChangeText={setFriendName}
           />
           <TextInput
             style={styles.input}
-            placeholder="Amount"
+            placeholder="Amount (₹)"
             placeholderTextColor={colors.muted}
             keyboardType="decimal-pad"
             value={amount}
             onChangeText={setAmount}
           />
+
           <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
-            <Text style={styles.dateText}>Due {dueDateLabel}</Text>
+            <Text style={styles.dateText}>📅 Due Date: {dueDateLabel}</Text>
           </Pressable>
+
           {showPicker ? (
             <DateTimePicker
               value={dueDate}
@@ -127,17 +136,42 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
               themeVariant="dark"
             />
           ) : null}
-          <Pressable style={styles.receiptButton} onPress={() => void pickReceipt()}>
-            <Text style={styles.receiptText}>{receiptUri ? "Change receipt" : "Attach receipt"}</Text>
-          </Pressable>
-          {receiptUri ? <Image source={{ uri: receiptUri }} style={styles.preview} /> : null}
+
+          {/* Receipt Selection & Preview */}
+          {receiptUri ? (
+            <View style={styles.previewBox}>
+              <Image
+                source={{ uri: receiptUri }}
+                style={styles.previewImg}
+                resizeMode="cover"
+              />
+              <View style={styles.previewOverlay}>
+                <Pressable style={styles.changeBtn} onPress={() => void pickReceipt()}>
+                  <Text style={styles.changeBtnText}>Change</Text>
+                </Pressable>
+                <Pressable style={styles.removeBtn} onPress={() => setReceiptUri(null)}>
+                  <Text style={styles.removeBtnText}>✕ Remove</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <Pressable style={styles.receiptButton} onPress={() => void pickReceipt()}>
+              <Text style={styles.receiptText}>📎 Attach Receipt Photo</Text>
+            </Pressable>
+          )}
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
+
           <View style={styles.actions}>
-            <Pressable style={styles.secondary} onPress={onClose}>
+            <Pressable style={styles.secondary} onPress={onClose} disabled={submitting}>
               <Text style={styles.secondaryText}>Cancel</Text>
             </Pressable>
             <Pressable style={styles.primary} onPress={() => void handleSubmit()} disabled={submitting}>
-              <Text style={styles.primaryText}>{submitting ? "Saving" : "Save"}</Text>
+              {submitting ? (
+                <ActivityIndicator color={colors.primaryDark} size="small" />
+              ) : (
+                <Text style={styles.primaryText}>Save Loan</Text>
+              )}
             </Pressable>
           </View>
         </View>
@@ -149,65 +183,118 @@ export const AddLoanModal = ({ visible, onClose, onSubmit }: Props) => {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(26, 26, 26, 0.72)",
+    backgroundColor: "rgba(11, 18, 17, 0.75)",
     justifyContent: "flex-end",
   },
   sheet: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   title: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.text,
+    color: colors.ice,
   },
   hint: {
     fontFamily: fonts.regular,
-    color: colors.muted,
-    marginTop: 6,
+    color: colors.mint,
+    marginTop: 4,
     marginBottom: spacing.md,
-    lineHeight: 18,
+    fontSize: 13,
   },
   input: {
     backgroundColor: colors.surface,
     borderRadius: 14,
     paddingHorizontal: spacing.md,
-    paddingVertical: 13,
+    paddingVertical: 14,
     marginBottom: spacing.sm,
-    color: colors.text,
+    color: colors.ice,
     fontFamily: fonts.regular,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   dateText: {
-    color: colors.text,
-    fontFamily: fonts.regular,
+    color: colors.ice,
+    fontFamily: fonts.medium,
+    fontSize: 14,
   },
   receiptButton: {
     borderWidth: 1,
-    borderColor: colors.muted,
+    borderColor: colors.teal,
+    borderStyle: "dashed",
     borderRadius: 14,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: "center",
     marginBottom: spacing.sm,
+    backgroundColor: "rgba(76, 167, 161, 0.08)",
   },
   receiptText: {
-    color: colors.text,
-    fontFamily: fonts.regular,
+    color: colors.ice,
+    fontFamily: fonts.medium,
+    fontSize: 14,
   },
-  preview: {
-    height: 120,
-    borderRadius: 12,
+  previewBox: {
+    width: "100%",
+    height: 150,
+    borderRadius: 14,
+    overflow: "hidden",
     marginBottom: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.teal,
+    position: "relative",
+  },
+  previewImg: {
+    width: "100%",
+    height: "100%",
+  },
+  previewOverlay: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    flexDirection: "row",
+    gap: 8,
+  },
+  changeBtn: {
+    backgroundColor: "rgba(18, 28, 27, 0.85)",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.mint,
+  },
+  changeBtnText: {
+    color: colors.ice,
+    fontFamily: fonts.medium,
+    fontSize: 12,
+  },
+  removeBtn: {
+    backgroundColor: "rgba(18, 28, 27, 0.85)",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255, 123, 123, 0.5)",
+  },
+  removeBtnText: {
+    color: "#FF8E8E",
+    fontFamily: fonts.medium,
+    fontSize: 12,
   },
   error: {
-    color: colors.text,
+    color: "#FF8E8E",
     fontFamily: fonts.regular,
+    fontSize: 13,
     marginBottom: spacing.sm,
   },
   actions: {
     flexDirection: "row",
     gap: spacing.sm,
+    marginTop: spacing.xs,
   },
   secondary: {
     flex: 1,
@@ -215,20 +302,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: "center",
     paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   secondaryText: {
-    color: colors.muted,
-    fontFamily: fonts.regular,
+    color: colors.mint,
+    fontFamily: fonts.medium,
+    fontSize: 14,
   },
   primary: {
     flex: 1,
     borderRadius: 14,
-    backgroundColor: colors.text,
+    backgroundColor: colors.teal,
     alignItems: "center",
     paddingVertical: 14,
   },
   primaryText: {
     color: colors.canvas,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.bold,
+    fontSize: 14,
   },
 });

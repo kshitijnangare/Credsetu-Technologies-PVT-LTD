@@ -54,34 +54,52 @@ export const DashboardScreen = () => {
           <Text style={styles.menuIcon}>☰</Text>
         </Pressable>
         <View style={styles.headerCopy}>
-          <Text style={styles.kicker}>MiniLedger</Text>
+          <Text style={styles.kicker}>MINILEDGER</Text>
           <Text style={styles.title}>Loans</Text>
         </View>
         <Pressable style={styles.addChip} onPress={() => setAddOpen(true)}>
-          <Text style={styles.addChipText}>Add</Text>
+          <Text style={styles.addChipText}>+ New</Text>
         </Pressable>
       </View>
 
       {loading && loans.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator color={colors.text} />
+          <ActivityIndicator color={colors.teal} size="large" />
         </View>
       ) : (
         <ScrollView
           contentContainerStyle={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.text} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => void refresh()}
+              tintColor={colors.teal}
+            />
+          }
         >
           <SummaryCard summary={summary} />
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          <Text style={styles.section}>Entries</Text>
+
+          <View style={styles.sectionRow}>
+            <Text style={styles.section}>All Entries</Text>
+            <Text style={styles.countBadge}>{loans.length}</Text>
+          </View>
+
           {loans.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>Nothing here yet</Text>
-              <Text style={styles.emptyText}>Add money you have lent. Receipt photos go to Cloudinary.</Text>
+              <Text style={styles.emptyIcon}>💸</Text>
+              <Text style={styles.emptyTitle}>No loans recorded yet</Text>
+              <Text style={styles.emptyText}>Tap "+ New" above to record money lent with an optional receipt.</Text>
             </View>
           ) : (
             loans.map((loan) => (
-              <LoanCard key={loan.id} loan={loan} onRepay={(id) => void repay(id)} busy={repayingId === loan.id} />
+              <LoanCard
+                key={loan.id}
+                loan={loan}
+                onRepay={(id) => void repay(id)}
+                busy={repayingId === loan.id}
+              />
             ))
           )}
         </ScrollView>
@@ -119,50 +137,67 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   menuIcon: {
-    color: colors.text,
-    fontSize: 18,
+    color: colors.ice,
+    fontSize: 20,
   },
   headerCopy: {
     flex: 1,
   },
   kicker: {
-    fontFamily: fonts.regular,
-    color: colors.muted,
-    fontSize: 12,
-    letterSpacing: 1,
+    fontFamily: fonts.semiBold,
+    color: colors.teal,
+    fontSize: 11,
+    letterSpacing: 1.5,
   },
   title: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.text,
+    color: colors.ice,
   },
   addChip: {
-    backgroundColor: colors.text,
+    backgroundColor: colors.teal,
     borderRadius: 999,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   addChipText: {
     color: colors.canvas,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.bold,
+    fontSize: 13,
   },
   content: {
     padding: spacing.md,
     paddingBottom: 48,
   },
-  section: {
+  sectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.muted,
+  },
+  section: {
+    fontFamily: fonts.semiBold,
+    fontSize: 13,
+    color: colors.mint,
     letterSpacing: 1,
     textTransform: "uppercase",
+  },
+  countBadge: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: colors.teal,
+    backgroundColor: "rgba(76, 167, 161, 0.12)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
   center: {
     flex: 1,
@@ -170,22 +205,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   error: {
-    fontFamily: fonts.regular,
-    color: colors.text,
+    fontFamily: fonts.medium,
+    color: "#FF8E8E",
     marginTop: spacing.md,
+    fontSize: 13,
   },
   empty: {
-    backgroundColor: colors.background,
-    borderRadius: 18,
-    padding: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: spacing.xl,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.sm,
+  },
+  emptyIcon: {
+    fontSize: 36,
+    marginBottom: spacing.sm,
   },
   emptyTitle: {
-    fontFamily: fonts.regular,
-    color: colors.text,
+    fontFamily: fonts.bold,
+    color: colors.ice,
+    fontSize: 16,
     marginBottom: 6,
   },
   emptyText: {
     fontFamily: fonts.regular,
-    color: colors.muted,
+    color: colors.mint,
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

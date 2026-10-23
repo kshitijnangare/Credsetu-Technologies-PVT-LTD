@@ -92,12 +92,21 @@ export const loanApi = {
     form.append("amount", payload.amount);
     form.append("dueDate", payload.dueDate);
     if (payload.receiptUri) {
-      const name = payload.receiptUri.split("/").pop() ?? "receipt.jpg";
-      form.append("receipt", {
-        uri: payload.receiptUri,
-        name,
-        type: name.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg",
-      } as unknown as Blob);
+      const uri = payload.receiptUri;
+      const cleanName = uri.split("/").pop()?.split("?")[0] ?? "receipt.jpg";
+      const fileType = cleanName.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+
+      if (Platform.OS === "web") {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        form.append("receipt", blob, cleanName);
+      } else {
+        form.append("receipt", {
+          uri,
+          name: cleanName,
+          type: fileType,
+        } as unknown as Blob);
+      }
     }
     const { data } = await api.post<Loan>("/loans", form, {
       headers: { "Content-Type": "multipart/form-data" },

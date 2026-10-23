@@ -11,9 +11,9 @@ type Props = {
 export const SummaryCard = ({ summary }: Props) => {
   return (
     <View style={styles.wrap}>
-      <Metric label="Lent" value={summary.totalLent} emphasized />
-      <Metric label="Repaid" value={summary.totalRepaid} />
-      <Metric label="Overdue" value={summary.overdueAmount} inverted={summary.overdueAmount > 0} />
+      <Metric label="Total Lent" value={summary.totalLent} tone="lent" />
+      <Metric label="Repaid" value={summary.totalRepaid} tone="repaid" />
+      <Metric label="Overdue" value={summary.overdueAmount} tone="overdue" isOverdue={summary.overdueAmount > 0} />
     </View>
   );
 };
@@ -21,18 +21,27 @@ export const SummaryCard = ({ summary }: Props) => {
 const Metric = ({
   label,
   value,
-  emphasized,
-  inverted,
+  tone,
+  isOverdue,
 }: {
   label: string;
   value: number;
-  emphasized?: boolean;
-  inverted?: boolean;
+  tone: "lent" | "repaid" | "overdue";
+  isOverdue?: boolean;
 }) => {
   return (
-    <View style={[styles.card, inverted && styles.inverted, emphasized && !inverted && styles.emphasized]}>
-      <Text style={[styles.label, inverted && styles.invertedText]}>{label}</Text>
-      <Text style={[styles.value, inverted && styles.invertedText]}>{formatCurrency(value)}</Text>
+    <View style={[styles.card, isOverdue && styles.cardOverdue]}>
+      <Text style={[styles.label, isOverdue && styles.labelOverdue]}>{label}</Text>
+      <Text
+        style={[
+          styles.value,
+          tone === "lent" && styles.valueLent,
+          tone === "repaid" && styles.valueRepaid,
+          isOverdue && styles.valueOverdue,
+        ]}
+      >
+        {formatCurrency(value)}
+      </Text>
     </View>
   );
 };
@@ -47,30 +56,38 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 16,
     padding: spacing.sm,
-    minHeight: 78,
+    minHeight: 82,
     justifyContent: "space-between",
-  },
-  emphasized: {
-    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.muted,
+    borderColor: colors.border,
   },
-  inverted: {
-    backgroundColor: colors.text,
+  cardOverdue: {
+    borderColor: "rgba(255, 123, 123, 0.4)",
+    backgroundColor: "rgba(255, 123, 123, 0.08)",
   },
   label: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    color: colors.muted,
-    letterSpacing: 0.4,
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    color: colors.mint,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  labelOverdue: {
+    color: "#FF8E8E",
   },
   value: {
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    color: colors.text,
-    marginTop: 8,
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: colors.ice,
+    marginTop: 6,
   },
-  invertedText: {
-    color: colors.canvas,
+  valueLent: {
+    color: colors.ice,
+  },
+  valueRepaid: {
+    color: colors.teal,
+  },
+  valueOverdue: {
+    color: "#FF8E8E",
   },
 });
