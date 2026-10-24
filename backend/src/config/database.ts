@@ -13,14 +13,16 @@ const sslConfig = env.dbSsl
 export const sequelize = env.databaseUrl
   ? new Sequelize(env.databaseUrl, {
       dialect: "postgres",
-      logging: env.nodeEnv === "development" ? console.log : false,
+      // logging: env.nodeEnv === "development" ? console.log : false,
+      logging: false,
       dialectOptions: sslConfig,
     })
   : new Sequelize(env.dbName, env.dbUser, env.dbPassword, {
       host: env.dbHost,
       port: env.dbPort,
       dialect: "postgres",
-      logging: env.nodeEnv === "development" ? console.log : false,
+      // logging: env.nodeEnv === "development" ? console.log : false,
+      logging: false,
       dialectOptions: sslConfig,
     });
 
